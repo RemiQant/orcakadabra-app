@@ -58,3 +58,6 @@ lerna-debug.log*
 *.njsproj
 *.sln
 *.sw?
+
+# Ignore accidental npm lockfile
+package-lock.json
