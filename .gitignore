@@ -1,23 +1,47 @@
-# Dependencies
-node_modules
+# == Dependencies ==
+node_modules/
 frontend/dist/
+dist/
+dist-ssr/
+*.local
+
+# == Python / FastAPI ==
+# virtualenvs
+venv/
+.venv/
+env/
 backend/venv/
-backend/__pycache__/
+
+# byte-compiled / cache
+__pycache__/
+*.py[cod]
+*.pyo
 *.pyc
 
-# Secrets
+# distribution / packaging
+*.egg-info/
+pip-wheel-metadata/
+
+# test / tooling
+.pytest_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+.python-version
+
+# == Secrets ==
 .env
 .env.development
 .env.production
 backend/.env
 frontend/.env
 
-# OS Files
+# == OS files ==
 .DS_Store
 Thumbs.db
 
-# Logs
-logs
+# == Logs ==
+logs/
 *.log
 npm-debug.log*
 yarn-debug.log*
@@ -25,36 +49,12 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-dist
-dist-ssr
-*.local
-
-# Editor directories and files
-.vscode/*
+# == Editor directories and files ==
+.vscode/
 !.vscode/extensions.json
-.idea
+.idea/
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
-
-# Python / FastAPI
-# virtualenvs
-venv/
-.venv/
-env/
-backend/venv/
-# Byte-compiled / cache
-__pycache__/
-*.py[cod]
-*.pyo
-# Distribution / packaging
-*.egg-info/
-pip-wheel-metadata/
-# Test / tooling
-.pytest_cache/
-.mypy_cache/
-.coverage
-htmlcov/
-.python-version
