@@ -38,3 +38,23 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Python / FastAPI
+# virtualenvs
+venv/
+.venv/
+env/
+backend/venv/
+# Byte-compiled / cache
+__pycache__/
+*.py[cod]
+*.pyo
+# Distribution / packaging
+*.egg-info/
+pip-wheel-metadata/
+# Test / tooling
+.pytest_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+.python-version
