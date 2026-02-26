@@ -1,5 +1,5 @@
 # Dependencies
-node_module/
+node_modules
 frontend/dist/
 backend/venv/
 backend/__pycache__/
@@ -11,9 +11,11 @@ backend/__pycache__/
 .env.production
 backend/.env
 frontend/.env
-# OS FIles
+
+# OS Files
 .DS_Store
 Thumbs.db
+
 # Logs
 logs
 *.log
@@ -22,10 +24,11 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
-node_modules
+
 dist
 dist-ssr
 *.local
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
