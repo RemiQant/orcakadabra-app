@@ -1,0 +1,28 @@
+# Enforce LF in the repository for text files; prevents CRLF/LF noise
+* text=auto
+
+# Explicitly set common source file types to LF
+*.sh text eol=lf
+*.py text eol=lf
+*.js text eol=lf
+*.jsx text eol=lf
+*.ts text eol=lf
+*.tsx text eol=lf
+*.json text eol=lf
+*.html text eol=lf
+*.css text eol=lf
+*.scss text eol=lf
+*.md text eol=lf
+
+# Binary files (do not attempt to normalize)
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.zip binary
+
+# Lockfiles: keep LF
+package-lock.json text eol=lf
+pnpm-lock.yaml text eol=lf
