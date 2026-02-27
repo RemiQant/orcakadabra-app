@@ -1,4 +1,7 @@
-@import "tailwindcss";
+/* Tailwind v3 directives — use @import "tailwindcss" only with Tailwind v4+ */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 :root {
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;

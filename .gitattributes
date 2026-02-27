@@ -1,4 +1,5 @@
-# Enforce LF in the repository for text files; prevents CRLF/LF noise
+# Normalize line endings on checkout/commit for text files.
+# Specific rules below enforce LF for source/config files.
 * text=auto
 
 # Explicitly set common source file types to LF
