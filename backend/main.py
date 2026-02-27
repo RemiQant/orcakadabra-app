@@ -11,7 +11,20 @@ from fastapi.middleware.cors import CORSMiddleware
 if TYPE_CHECKING:
     from supabase import Client
 
-load_dotenv()
+# ── Environment file loading ───────────────────────────────────────────────────────────
+# Priority:
+#   1. APP_ENV is read from the OS environment (set by Leapcell / SAE / CI).
+#   2. load_dotenv loads the matching .env.<APP_ENV> file for local development.
+#   3. override=False means platform-injected vars are NEVER overwritten by the file.
+#
+# | APP_ENV     | File loaded            | Where used                     |
+# |-------------|------------------------|--------------------------------|
+# | development | .env.development       | Local (your machine)           |
+# | staging     | .env.staging           | Local staging simulation only  |
+# | production  | .env.production        | Local prod simulation only     |
+# | (cloud)     | (no file; vars injected by runtime platform) |
+APP_ENV: str = os.getenv("APP_ENV", "development")
+load_dotenv(dotenv_path=f".env.{APP_ENV}", override=False)
 
 # ── Supabase Client (lazy) ────────────────────────────────────────────────────
 @lru_cache(maxsize=1)
@@ -87,14 +100,22 @@ _raw_origins: str = os.getenv(
     "ALLOWED_ORIGINS",
     "http://localhost:5173,http://127.0.0.1:5173",
 )
-ALLOWED_ORIGINS: list[str] = [o.strip() for o in _raw_origins.split(",") if o.strip()]
+# Strip wildcards — "*" is incompatible with allow_credentials=True and will
+# cause every credentialed request to fail silently in the browser.
+ALLOWED_ORIGINS: list[str] = [
+    o.strip() for o in _raw_origins.split(",") if o.strip() and o.strip() != "*"
+]
 
 # ── App ───────────────────────────────────────────────────────────────────────
+# Disable interactive API docs in production — they expose your schema publicly.
+_docs_url = None if APP_ENV == "production" else "/docs"
+_redoc_url = None if APP_ENV == "production" else "/redoc"
+
 app = FastAPI(
     title="Paylabs AI e-KYC API",
     version="0.1.0",
-    docs_url="/docs",
-    redoc_url="/redoc",
+    docs_url=_docs_url,
+    redoc_url=_redoc_url,
 )
 
 app.add_middleware(
@@ -110,7 +131,7 @@ app.add_middleware(
 @app.get("/health", tags=["System"])
 async def health_check():
     """Health probe endpoint required by Leapcell and Alibaba Cloud SAE."""
-    return {"status": "healthy", "version": "0.1.0"}
+    return {"status": "healthy", "version": app.version}
 
 
 @app.get("/", tags=["System"])
