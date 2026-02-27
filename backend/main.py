@@ -31,7 +31,7 @@ load_dotenv(dotenv_path=f".env.{APP_ENV}", override=False)
 def get_supabase() -> "Client":
     """
     FastAPI dependency. Initialised once on first request.
-    Install supabase-py and set SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY to use.
+    Install the "supabase" package and set SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY to use.
     """
     try:
         from supabase import create_client  # noqa: PLC0415
