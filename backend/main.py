@@ -85,7 +85,7 @@ def get_r2():
     )
 
 
-R2_BUCKET_NAME: str = os.getenv("R2_BUCKET_NAME", "kyc-documents")
+R2_BUCKET_NAME: str = os.getenv("R2_BUCKET_NAME")
 
 # Type aliases for use in route signatures, e.g.:
 #   async def my_route(db: SupabaseDep, storage: R2Dep): ...
