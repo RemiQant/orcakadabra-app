@@ -5,10 +5,10 @@ from io import BytesIO
 from fastapi import APIRouter, File, Form, HTTPException, UploadFile
 from PIL import Image
 
-from backend.services.oss_services import upload_to_oss
-from backend.services.r2_services import upload_to_r2
-from backend.services.ai_services import analyze_documents_from_url
-from backend.services.db_services import save_merchant_kyc
+from services.oss_services import upload_to_oss
+from services.r2_services import upload_to_r2
+from services.ai_services import analyze_documents_from_url
+from services.db_services import save_merchant_kyc
 
 logger = logging.getLogger(__name__)
 
