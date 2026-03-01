@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 # ── Configuration ─────────────────────────────────────────────────────────────
 # All env loading is centralised in core/config.py (dotenv is loaded there on
 # import, before any env var is read here).
-from backend.core.config import APP_ENV, ALLOWED_ORIGINS  # noqa: E402
+from core.config import APP_ENV, ALLOWED_ORIGINS  # noqa: E402
 
 # ── Supabase Client (lazy) ────────────────────────────────────────────────────
 @lru_cache(maxsize=1)
@@ -107,7 +107,7 @@ app.add_middleware(
 )
 
 # ── Routers ───────────────────────────────────────────────────────────────────
-from backend.api.routers import kyc as kyc_router  # noqa: E402
+from api.routers import kyc as kyc_router  # noqa: E402
 app.include_router(kyc_router.router, prefix="/kyc", tags=["KYC"])
 
 # ── Routes ────────────────────────────────────────────────────────────────────
