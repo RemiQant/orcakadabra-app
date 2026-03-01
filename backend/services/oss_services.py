@@ -3,7 +3,7 @@ from urllib.parse import urlparse
 
 import oss2
 
-from backend.core.config import (
+from core.config import (
     ALIBABA_CLOUD_ACCESS_KEY_ID,
     ALIBABA_CLOUD_ACCESS_KEY_SECRET,
     OSS_BUCKET_NAME,
