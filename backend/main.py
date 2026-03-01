@@ -2,7 +2,6 @@ import os
 from functools import lru_cache
 from typing import TYPE_CHECKING, Annotated
 
-from dotenv import load_dotenv
 from fastapi import Depends, FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -11,20 +10,10 @@ from fastapi.middleware.cors import CORSMiddleware
 if TYPE_CHECKING:
     from supabase import Client
 
-# ── Environment file loading ───────────────────────────────────────────────────────────
-# Priority:
-#   1. APP_ENV is read from the OS environment (set by Leapcell / SAE / CI).
-#   2. load_dotenv loads the matching .env.<APP_ENV> file for local development.
-#   3. override=False means platform-injected vars are NEVER overwritten by the file.
-#
-# | APP_ENV     | File loaded            | Where used                     |
-# |-------------|------------------------|--------------------------------|
-# | development | .env.development       | Local (your machine)           |
-# | staging     | .env.staging           | Local staging simulation only  |
-# | production  | .env.production        | Local prod simulation only     |
-# | (cloud)     | (no file; vars injected by runtime platform) |
-APP_ENV: str = os.getenv("APP_ENV", "development")
-load_dotenv(dotenv_path=f".env.{APP_ENV}", override=False)
+# ── Configuration ─────────────────────────────────────────────────────────────
+# All env loading is centralised in core/config.py (dotenv is loaded there on
+# import, before any env var is read here).
+from backend.core.config import APP_ENV, ALLOWED_ORIGINS  # noqa: E402
 
 # ── Supabase Client (lazy) ────────────────────────────────────────────────────
 @lru_cache(maxsize=1)
@@ -97,20 +86,6 @@ def get_r2():
 SupabaseDep = Annotated["Client", Depends(get_supabase)]
 R2Dep = Annotated[object, Depends(get_r2)]
 
-# ── CORS ──────────────────────────────────────────────────────────────────────
-# Set ALLOWED_ORIGINS in your .env as a comma-separated list.
-# WARNING: "*" is intentionally excluded — it is incompatible with
-#          allow_credentials=True and would be rejected by all browsers.
-_raw_origins: str = os.getenv(
-    "ALLOWED_ORIGINS",
-    "http://localhost:5173,http://127.0.0.1:5173",
-)
-# Strip wildcards — "*" is incompatible with allow_credentials=True and will
-# cause every credentialed request to fail silently in the browser.
-ALLOWED_ORIGINS: list[str] = [
-    o.strip() for o in _raw_origins.split(",") if o.strip() and o.strip() != "*"
-]
-
 # ── App ───────────────────────────────────────────────────────────────────────
 # Disable interactive API docs in production — they expose your schema publicly.
 _docs_url = None if APP_ENV == "production" else "/docs"
@@ -130,6 +105,10 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# ── Routers ───────────────────────────────────────────────────────────────────
+from backend.api.routers import kyc as kyc_router  # noqa: E402
+app.include_router(kyc_router.router, prefix="/kyc", tags=["KYC"])
 
 # ── Routes ────────────────────────────────────────────────────────────────────
 
