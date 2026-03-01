@@ -38,7 +38,7 @@ def get_supabase() -> "Client":
     except ImportError as exc:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="supabase-py is not installed. Run: pip install supabase",
+            detail="supabase is not installed. Run: pip install supabase",
         ) from exc
 
     url = os.getenv("SUPABASE_URL", "")
@@ -70,12 +70,13 @@ def get_r2():
     endpoint = os.getenv("R2_ENDPOINT_URL")
     access_key = os.getenv("R2_ACCESS_KEY_ID")
     secret_key = os.getenv("R2_SECRET_ACCESS_KEY")
-    if not all([endpoint, access_key, secret_key]):
+    bucket = os.getenv("R2_BUCKET_NAME")
+    if not all([endpoint, access_key, secret_key, bucket]):
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="R2_ENDPOINT_URL, R2_ACCESS_KEY_ID, and R2_SECRET_ACCESS_KEY env vars are not set.",
+            detail="R2_ENDPOINT_URL, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, and R2_BUCKET_NAME env vars are not set.",
         )
-    return boto3.client(
+    client = boto3.client(
         "s3",
         endpoint_url=endpoint,
         aws_access_key_id=access_key,
@@ -83,9 +84,13 @@ def get_r2():
         config=Config(signature_version="s3v4"),
         region_name="auto",
     )
+    # Attach bucket name so callers can do: r2, bucket = Depends(get_r2)
+    client._bucket_name = bucket  # type: ignore[attr-defined]
+    return client
 
 
-R2_BUCKET_NAME: str = os.getenv("R2_BUCKET_NAME")
+# R2_BUCKET_NAME is now read lazily inside get_r2() alongside the other R2 vars.
+# Access it via: r2_client._bucket_name  or pass R2Dep to your route.
 
 # Type aliases for use in route signatures, e.g.:
 #   async def my_route(db: SupabaseDep, storage: R2Dep): ...
