@@ -2,7 +2,7 @@ import uuid
 
 import boto3
 
-from backend.core.config import (
+from core.config import (
     R2_ACCESS_KEY_ID,
     R2_BUCKET_NAME,
     R2_ENDPOINT_URL,

@@ -1,80 +1,62 @@
-"""
-AI document analysis service using Alibaba Cloud Qwen Vision Language Model.
-
-This module provides document analysis for KYC verification by sending
-document URLs to the Qwen VL API and interpreting the response.
-"""
+from openai import OpenAI
+import re
 import json
-import logging
+from core.config import DASHSCOPE_API_KEY, QWEN_VL_MODEL
 
-from backend.core.config import DASHSCOPE_API_KEY, QWEN_VL_MODEL
+ai_client = OpenAI(
+    api_key=DASHSCOPE_API_KEY,
+    base_url="https://dashscope-intl.aliyuncs.com/compatible-mode/v1"
+)
 
-logger = logging.getLogger(__name__)
-
-try:
-    import dashscope
-    from dashscope import MultiModalConversation
-except ImportError:  # pragma: no cover
-    dashscope = None  # type: ignore[assignment]
-    MultiModalConversation = None  # type: ignore[assignment,misc]
-
-
-def analyze_documents_from_url(
-    nama: str,
-    tgl_lahir: str,
-    ktp_url: str,
-    npwp_url: str,
-    nib_url: str,
-) -> dict:
+def analyze_documents_from_url(nama: str, tgl_lahir: str, ktp_url: str):
+    system_prompt = f"""
+    Kamu adalah Auditor e-KYC PayLabs tingkat militer. Evaluasi form input dengan dokumen KTP.
+    Data Form: Nama: {nama}, Tgl Lahir: {tgl_lahir}.
+    
+    ATURAN PENOLAKAN (is_fake: true):
+    1. Visual: Tolak jika ada coretan, kumis buatan, batas kotak editan Photoshop, atau pola layar monitor (Moiré).
+    2. Logika NIK KTP: Jika wanita, tgl di NIK +40. Rumus NIK (digit 7-12) WAJIB SAMA dengan Tgl Lahir input DAN Tgl di NIK WAJIB LOGIS (misal: tgl 31 di bulan 2 jelas tidak logis), serta Tgl di KTP WAJIB SAMA dengan Tgl Lahir input.
+    
+    Keluarkan HANYA JSON MURNI (Wajib kerjakan ai_reasoning dahulu sebelum mengambil keputusan is_fake):
+    {{
+      "data_ekstraksi": {{
+         "nik_ktp": "..."
+      }},
+      "ai_reasoning": "Langkah 1 (Visual):... Langkah 2 (Logika NIK vs Form):...",
+      "is_fake": true/false,
+      "risk_score": 0-100,
+      "confidence_score": 0-100,
+      "fraud_reason": "Sebutkan detail ketidakcocokan logika atau temuan visual. (Kosongkan jika asli)"
+    }}
     """
-    Analyze KYC documents via Qwen VL and return a structured risk assessment.
-
-    Returns a dict with keys:
-      - is_fake (bool)
-      - risk_score (int, 0-100)
-      - ai_reasoning (str)
-      - fraud_reason (str)
-    """
-    if dashscope is None or MultiModalConversation is None:
-        raise RuntimeError(
-            "dashscope package is not installed. Run: pip install dashscope"
-        )
-
-    if not DASHSCOPE_API_KEY:
-        raise RuntimeError("DASHSCOPE_API_KEY is not configured.")
-
-    dashscope.api_key = DASHSCOPE_API_KEY
-
-    messages = [
-        {
-            "role": "user",
-            "content": [
-                {"image": ktp_url},
-                {"image": npwp_url},
-                {"image": nib_url},
-                {
-                    "text": (
-                        f"Nama: {nama}, Tanggal Lahir: {tgl_lahir}. "
-                        "Analisis dokumen KYC berikut. Tentukan apakah dokumen asli atau palsu, "
-                        "berikan risk_score (0-100), ai_reasoning, dan fraud_reason. "
-                        "Balas dalam format JSON: "
-                        '{"is_fake": bool, "risk_score": int, "ai_reasoning": str, "fraud_reason": str}'
-                    )
-                },
-            ],
-        }
-    ]
-
-    response = MultiModalConversation.call(model=QWEN_VL_MODEL, messages=messages)
-
-    raw_text = response.output.choices[0].message.content[0].get("text", "")
-    try:
-        return json.loads(raw_text)
-    except json.JSONDecodeError:
-        logger.warning("Could not parse AI response as JSON: %s", raw_text)
-        return {
-            "is_fake": True,
-            "risk_score": 100,
-            "ai_reasoning": raw_text,
-            "fraud_reason": "Could not parse AI response",
-        }
+    
+    completion = ai_client.chat.completions.create(
+        model=QWEN_VL_MODEL, 
+        messages=[
+            {
+                "role": "user",
+                "content": [
+                    {"type": "image_url", "image_url": {"url": ktp_url}},
+                    {"type": "text", "text": system_prompt}
+                ]
+            }
+        ],
+        max_tokens=600, 
+        temperature=0.01
+    )
+    
+    hasil_ai_raw = ""
+    for pilihan in completion.choices:
+        hasil_ai_raw = pilihan.message.content
+        break
+        
+    hasil_ai_raw = re.sub(r'<think>.*?</think>', '', hasil_ai_raw, flags=re.DOTALL)
+    match = re.search(r'\{.*\}', hasil_ai_raw, re.DOTALL)
+    
+    if match:
+        try:
+            return json.loads(match.group(0))
+        except json.JSONDecodeError:
+            pass
+            
+    return {"is_fake": True, "fraud_reason": "Gagal membaca JSON dari AI", "ai_reasoning": hasil_ai_raw}
