@@ -15,7 +15,7 @@ def analyze_documents_from_url(nama: str, tgl_lahir: str, ktp_url: str):
     
     ATURAN PENOLAKAN (is_fake: true):
     1. Visual: Tolak jika ada coretan, kumis buatan, batas kotak editan Photoshop, atau pola layar monitor (Moiré).
-    2. Logika NIK KTP: Jika wanita, tgl di NIK +40. Rumus NIK (digit 7-12) WAJIB SAMA dengan Tgl Lahir input.
+    2. Logika NIK KTP: Jika wanita, tgl di NIK +40. Rumus NIK (digit 7-12) WAJIB SAMA dengan Tgl Lahir input DAN Tgl di NIK WAJIB LOGIS (misal: tgl 31 di bulan 2 jelas tidak logis), serta Tgl di KTP WAJIB SAMA dengan Tgl Lahir input.
     
     Keluarkan HANYA JSON MURNI (Wajib kerjakan ai_reasoning dahulu sebelum mengambil keputusan is_fake):
     {{
