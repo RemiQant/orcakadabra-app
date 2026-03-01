@@ -1,6 +1,7 @@
 import { fileURLToPath } from 'url'
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react-swc'
+import path from "path"
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -8,6 +9,12 @@ export default defineConfig({
   server: {
     port: 5173,
     strictPort: true, // fail loudly if 5173 is already in use instead of silently switching ports
+  },
+  optimizeDeps: {
+    include: ['framer-motion', 'react/jsx-runtime'],
+  },
+  ssr: {
+    noExternal: ['framer-motion'],
   },
   resolve: {
     alias: {

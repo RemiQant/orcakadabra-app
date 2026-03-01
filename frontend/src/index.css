@@ -71,3 +71,40 @@ button:focus-visible {
     background-color: #f9f9f9;
   }
 }
+
+/* KYC component animations */
+.fade-slide-in {
+  opacity: 0;
+  transform: translateX(-8px);
+  animation: fadeSlideIn 260ms ease forwards;
+}
+@keyframes fadeSlideIn {
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.fade-in-up {
+  opacity: 0;
+  transform: translateY(8px);
+  animation: fadeInUp 300ms ease forwards;
+}
+@keyframes fadeInUp {
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.progress-bar-inner {
+  width: 0%;
+  animation-name: progressWidth;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+}
+@keyframes progressWidth {
+  to { width: 100%; }
+}
+
+.dash-spin {
+  transform-origin: 50% 50%;
+  animation: spin 2s linear infinite;
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
