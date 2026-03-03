@@ -107,8 +107,11 @@ app.add_middleware(
 )
 
 # ── Routers ───────────────────────────────────────────────────────────────────
-from api.routers import kyc as kyc_router  # noqa: E402
+from api.routers import kyc as kyc_router      # noqa: E402
+from api.routers import admin as admin_router  # noqa: E402
+
 app.include_router(kyc_router.router, prefix="/kyc", tags=["KYC"])
+app.include_router(admin_router.router, prefix="/admin", tags=["Admin"])
 
 # ── Routes ────────────────────────────────────────────────────────────────────
 

@@ -38,6 +38,7 @@ async def upload_with_fallback(file_bytes: bytes, filename: str, folder: str) ->
 @router.post("/verify-merchant")
 async def verify_merchant(
     nama: str = Form(...),
+    nik: str = Form(...),
     tgl_lahir: str = Form(...),
     ktp: UploadFile = File(...)
 ):
@@ -48,16 +49,17 @@ async def verify_merchant(
         # 2. Upload KTP ke storage (dengan mekanisme fallback)
         ktp_url = await upload_with_fallback(ktp_bytes, ktp.filename, "ktp")
         
-        # 3. Lempar ke AI
+        # 3. Lempar ke AI (NIK disertakan untuk cross-validasi)
         ai_result = await asyncio.to_thread(
-            analyze_documents_from_url, nama, tgl_lahir, ktp_url
+            analyze_documents_from_url, nama, nik, tgl_lahir, ktp_url
         )
         
-        # 4. Simpan ke Supabase (Pastikan kolom npwp_url dan nib_url di-set kosong atau dihapus)
+        # 4. Simpan ke Supabase
         db_record = {
             "nama_lengkap": nama,
+            "nik": nik,
             "tgl_lahir": tgl_lahir,
-            "ktp_url": ktp_url.split('?'),
+            "ktp_url": ktp_url.split('?')[0],  # strip OSS image-processing query params
             "is_fake": ai_result.get("is_fake", True),
             "risk_score": ai_result.get("risk_score", 100),
             "ai_reasoning": ai_result.get("ai_reasoning", ""),
