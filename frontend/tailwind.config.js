@@ -5,7 +5,13 @@ export default {
     "./src/**/*.{ts,tsx}",
   ],
   theme: {
-    extend: {},
+    extend: {
+      colors: {
+        'paylabs-teal':  '#296E8F',
+        'paylabs-navy':  '#2A3954',
+        'paylabs-bg':    '#FAFBFE',
+      },
+    },
   },
   plugins: [],
 }
