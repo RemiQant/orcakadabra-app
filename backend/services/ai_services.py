@@ -8,21 +8,22 @@ ai_client = OpenAI(
     base_url="https://dashscope-intl.aliyuncs.com/compatible-mode/v1"
 )
 
-def analyze_documents_from_url(nama: str, tgl_lahir: str, ktp_url: str):
+def analyze_documents_from_url(nama: str, nik: str, tgl_lahir: str, ktp_url: str):
     system_prompt = f"""
     Kamu adalah Auditor e-KYC PayLabs tingkat militer. Evaluasi form input dengan dokumen KTP.
-    Data Form: Nama: {nama}, Tgl Lahir: {tgl_lahir}.
+    Data Form: Nama: {nama}, NIK: {nik}, Tgl Lahir: {tgl_lahir}.
     
     ATURAN PENOLAKAN (is_fake: true):
     1. Visual: Tolak jika ada coretan, kumis buatan, batas kotak editan Photoshop, atau pola layar monitor (Moiré).
     2. Logika NIK KTP: Jika wanita, tgl di NIK +40. Rumus NIK (digit 7-12) WAJIB SAMA dengan Tgl Lahir input DAN Tgl di NIK WAJIB LOGIS (misal: tgl 31 di bulan 2 jelas tidak logis), serta Tgl di KTP WAJIB SAMA dengan Tgl Lahir input.
+    3. Validasi NIK Input: NIK yang dimasukkan di form ({nik}) WAJIB SAMA dengan NIK yang tertera di KTP. Jika berbeda, tolak.
     
     Keluarkan HANYA JSON MURNI (Wajib kerjakan ai_reasoning dahulu sebelum mengambil keputusan is_fake):
     {{
       "data_ekstraksi": {{
          "nik_ktp": "..."
       }},
-      "ai_reasoning": "Langkah 1 (Visual):... Langkah 2 (Logika NIK vs Form):...",
+      "ai_reasoning": "Langkah 1 (Visual):... Langkah 2 (Logika NIK vs Form):... Langkah 3 (Validasi NIK Input):...",
       "is_fake": true/false,
       "risk_score": 0-100,
       "confidence_score": 0-100,
