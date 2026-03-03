@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
-import { CheckCircle2, IdCard, Receipt, BadgeCheck, type LucideIcon } from 'lucide-react'
+import { CheckCircle2, BadgeCheck } from 'lucide-react'
 import paylabsLogo from '@/assets/paylabs-logo.png'
 
 // ── Stepper — all steps done ──────────────────────────────────────────────────
@@ -12,10 +12,10 @@ function StepCircle({ done }: { done: boolean }) {
 }
 
 function Stepper() {
-  const steps: { label: string; Icon: LucideIcon }[] = [
-    { label: 'Verifikasi KTP',  Icon: IdCard     },
-    { label: 'Verifikasi NPWP', Icon: Receipt    },
-    { label: 'Selesai',         Icon: BadgeCheck },
+  const steps: { label: string }[] = [
+    { label: 'Verifikasi KTP'  },
+    { label: 'Verifikasi NPWP' },
+    { label: 'Selesai'         },
   ]
   return (
     <div className="flex items-start gap-0 mt-8">
@@ -24,7 +24,7 @@ function Stepper() {
           <div className="flex flex-col items-center gap-2">
             <StepCircle done />
             <p className="text-center text-xs text-gray-500 leading-snug">
-              Steps {i + 1}<br />{step.label}
+              Step {i + 1}<br />{step.label}
             </p>
           </div>
           {i < steps.length - 1 && (

@@ -1,3 +1,8 @@
+import { useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
+
 export default function LandingPage() {
-  return <div>LandingPage — coming from Figma</div>
+  const navigate = useNavigate()
+  useEffect(() => { navigate('/kyc', { replace: true }) }, [navigate])
+  return null
 }

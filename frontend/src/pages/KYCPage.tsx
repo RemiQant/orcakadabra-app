@@ -35,7 +35,7 @@ function Field({
         value={value}
         required
         onChange={(e) => onChange(e.target.value)}
-        className="border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-paylabs-teal focus:border-transparent transition-shadow"
+        className="border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-paylabs-teal focus:border-transparent transition-shadow"
       />
     </div>
   )
@@ -69,7 +69,7 @@ function Stepper() {
           <div className="flex flex-col items-center gap-2">
             <StepCircle active={step.active} Icon={step.Icon} />
             <p className="text-center text-xs text-gray-500 leading-snug">
-              Steps {i + 1}<br />{step.label}
+              Step {i + 1}<br />{step.label}
             </p>
           </div>
           {i < steps.length - 1 && (
@@ -133,6 +133,7 @@ export default function KYCPage() {
     fd.append('nama', form.nama)
     fd.append('nik', form.nik)
     fd.append('tgl_lahir', form.tgl_lahir)
+    fd.append('tempat_lahir', form.tempat_lahir)
     fd.append('ktp', file)
     mutation.mutate(fd)
   }

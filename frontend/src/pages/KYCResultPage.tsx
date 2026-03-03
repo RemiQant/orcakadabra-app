@@ -26,7 +26,7 @@ function Stepper({ failed }: { failed: boolean }) {
           <div className="flex flex-col items-center gap-2">
             <StepCircle state={step.state} />
             <p className="text-center text-xs text-gray-500 leading-snug">
-              Steps {i + 1}<br />{step.label}
+              Step {i + 1}<br />{step.label}
             </p>
           </div>
           {i < steps.length - 1 && (
