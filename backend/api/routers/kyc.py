@@ -53,16 +53,26 @@ async def verify_merchant(
             analyze_documents_from_url, nama, tgl_lahir, ktp_url
         )
         
-        # 4. Simpan ke Supabase (Pastikan kolom npwp_url dan nib_url di-set kosong atau dihapus)
+        # 4. Ambil NIK dari hasil ekstraksi AI (Gunakan string kosong jika gagal/tidak ada)
+        extracted_nik = ai_result.get("data_ekstraksi", {}).get("nik", "")
+        
+        # 5. Tentukan Status Merchant Otomatis
+        is_fraud = ai_result.get("is_fake", True)
+        merchant_status = "REJECTED" if is_fraud else "PENDING_REVIEW"
+
+        # 6. Simpan data ke Supabase
         db_record = {
             "nama_lengkap": nama,
             "tgl_lahir": tgl_lahir,
-            "ktp_url": ktp_url.split('?'),
-            "is_fake": ai_result.get("is_fake", True),
+            "nik": extracted_nik, # Menyimpan NIK secara spesifik
+            "ktp_url": ktp_url.split('?'), # Membuang parameter OSS resize agar DB nyimpan original URL
+            "is_fake": is_fraud,
             "risk_score": ai_result.get("risk_score", 100),
             "ai_reasoning": ai_result.get("ai_reasoning", ""),
             "fraud_reason": ai_result.get("fraud_reason", ""),
-            "raw_ai_json": ai_result
+            "raw_ai_json": ai_result, # SELURUH 16 DATA KTP (Alamat, Agama, dll) TERSIMPAN DI SINI
+            "status": merchant_status,
+            "admin_notes": ""
         }
         saved_data = await asyncio.to_thread(save_merchant_kyc, db_record)
         

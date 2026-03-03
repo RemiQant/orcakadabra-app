@@ -10,19 +10,38 @@ ai_client = OpenAI(
 
 def analyze_documents_from_url(nama: str, tgl_lahir: str, ktp_url: str):
     system_prompt = f"""
-    Kamu adalah Auditor e-KYC PayLabs tingkat militer. Evaluasi form input dengan dokumen KTP.
+    Kamu adalah Auditor e-KYC PayLabs tingkat militer. Evaluasi dokumen KTP ini dengan form input pengguna.
     Data Form: Nama: {nama}, Tgl Lahir: {tgl_lahir}.
     
-    ATURAN PENOLAKAN (is_fake: true):
+    ATURAN 1: EKSTRAKSI DATA (OCR)
+    Baca seluruh teks yang ada di KTP dengan sangat akurat dan masukkan ke dalam struktur JSON "data_ekstraksi". Pisahkan antara Tempat Lahir dan Tgl Lahir.
+
+    ATURAN 2: DETEKSI FRAUD (is_fake: true jika melanggar)
     1. Visual: Tolak jika ada coretan, kumis buatan, batas kotak editan Photoshop, atau pola layar monitor (Moiré).
-    2. Logika NIK KTP: Jika wanita, tgl di NIK +40. Rumus NIK (digit 7-12) WAJIB SAMA dengan Tgl Lahir input DAN Tgl di NIK WAJIB LOGIS (misal: tgl 31 di bulan 2 jelas tidak logis), serta Tgl di KTP WAJIB SAMA dengan Tgl Lahir input.
+    2. Logika NIK KTP: Jika wanita, tgl di NIK +40. Rumus NIK (digit 7-12) WAJIB SAMA dengan Tgl Lahir input dan Tgl Lahir di KTP.
     
     Keluarkan HANYA JSON MURNI (Wajib kerjakan ai_reasoning dahulu sebelum mengambil keputusan is_fake):
     {{
       "data_ekstraksi": {{
-         "nik_ktp": "..."
+         "provinsi": "...",
+         "kota_kabupaten": "...",
+         "nik": "...",
+         "nama": "...",
+         "tempat_lahir": "...",
+         "tgl_lahir": "...",
+         "jenis_kelamin": "...",
+         "gol_darah": "...",
+         "alamat": "...",
+         "rt_rw": "...",
+         "kelurahan_desa": "...",
+         "kecamatan": "...",
+         "agama": "...",
+         "status_perkawinan": "...",
+         "pekerjaan": "...",
+         "kewarganegaraan": "...",
+         "berlaku_hingga": "..."
       }},
-      "ai_reasoning": "Langkah 1 (Visual):... Langkah 2 (Logika NIK vs Form):...",
+      "ai_reasoning": "Langkah 1 (Ekstraksi):... Langkah 2 (Visual):... Langkah 3 (Logika NIK vs Form):...",
       "is_fake": true/false,
       "risk_score": 0-100,
       "confidence_score": 0-100,
@@ -41,7 +60,7 @@ def analyze_documents_from_url(nama: str, tgl_lahir: str, ktp_url: str):
                 ]
             }
         ],
-        max_tokens=600, 
+        max_tokens=1500, # ---> PENTING: Naikkan menjadi 1500 karena data KTP sangat panjang!
         temperature=0.01
     )
     
