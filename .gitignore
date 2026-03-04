@@ -30,11 +30,9 @@ htmlcov/
 .python-version
 
 # == Secrets ==
-# Ignore all .env files except .env.example and .env.example.*
 .env
-.env.*
-!.env.example
-!.env.example.*
+.env.development
+.env.production
 backend/.env
 frontend/.env
 
