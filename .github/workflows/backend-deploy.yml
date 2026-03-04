@@ -1,0 +1,92 @@
+name: Backend CI/CD → Docker Hub → Alibaba SAE
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "backend/**"
+      - ".github/workflows/backend-deploy.yml"
+
+  # Allow manual trigger from GitHub Actions tab
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    name: Build, Push & Deploy
+    runs-on: ubuntu-latest
+
+    steps:
+      # ── 1. Checkout ────────────────────────────────────────────────────────
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # ── 2. Docker Buildx (faster multi-platform builds) ───────────────────
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # ── 3. Log in to Docker Hub ───────────────────────────────────────────
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_TOKEN }}
+
+      # ── 4. Build & push image ─────────────────────────────────────────────
+      # Tags: `latest` for the rolling release + SHA for pinned rollback
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          file: ./backend/Dockerfile
+          push: true
+          tags: |
+            remiqant/kyc-backend:latest
+            remiqant/kyc-backend:${{ github.sha }}
+          # Use GitHub Actions cache to speed up repeated builds
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # ── 5. Deploy to Alibaba Cloud SAE ────────────────────────────────────
+      - name: Install Alibaba Cloud CLI
+        run: |
+          curl -sSLo aliyun.tgz https://aliyuncli.alicdn.com/aliyun-cli-linux-latest-amd64.tgz
+          tar -xzf aliyun.tgz
+          sudo mv aliyun /usr/local/bin/
+          aliyun version
+
+      - name: Configure Alibaba Cloud credentials
+        run: |
+          aliyun configure set \
+            --profile default \
+            --mode AK \
+            --region ap-southeast-5 \
+            --access-key-id     "${{ secrets.ALIBABA_CLOUD_ACCESS_KEY_ID }}" \
+            --access-key-secret "${{ secrets.ALIBABA_CLOUD_ACCESS_KEY_SECRET }}"
+
+      - name: Deploy new image to SAE
+        run: |
+          aliyun sae DeployApplication \
+            --region ap-southeast-5 \
+            --AppId  "${{ secrets.SAE_APP_ID }}" \
+            --ImageUrl "docker.io/remiqant/kyc-backend:${{ github.sha }}"
+
+      # ── 6. Smoke-test after deploy ─────────────────────────────────────────
+      # SAE takes ~30s to swap the instance. We poll /health until it responds.
+      - name: Wait for SAE to come up and verify /health
+        env:
+          SAE_PUBLIC_URL: ${{ secrets.SAE_PUBLIC_URL }}
+        run: |
+          echo "Waiting 40s for SAE rolling deploy to complete..."
+          sleep 40
+          for i in {1..6}; do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$SAE_PUBLIC_URL/health" || true)
+            echo "Attempt $i — HTTP $STATUS"
+            if [ "$STATUS" = "200" ]; then
+              echo "✅ /health returned 200 — deploy successful."
+              exit 0
+            fi
+            sleep 10
+          done
+          echo "❌ /health never returned 200 after deploy."
+          exit 1

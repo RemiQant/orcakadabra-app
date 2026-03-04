@@ -1,4 +1,4 @@
-import path from "path"
+import { fileURLToPath } from 'url'
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react-swc'
 
@@ -11,7 +11,8 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      "@": path.resolve(__dirname, "./src"),
+      // ESM-safe path — __dirname is not available in ESM modules
+      "@": fileURLToPath(new URL('./src', import.meta.url)),
     },
   },
 })
