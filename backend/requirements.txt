@@ -1,7 +1,4 @@
 annotated-types==0.7.0
-anyio==4.12.1
-boto3==1.42.57
-botocore==1.42.57
 certifi==2026.2.25
 click==8.3.1
 colorama==0.4.6
@@ -23,7 +20,6 @@ uvicorn==0.27.1
 
 openai>=1.50.0
 oss2==2.18.4
-Pillow==12.1.1
 alibabacloud_cloudauth_intl20220809==1.0.12
 alibabacloud_tea_openapi==0.3.8
 dashscope==1.25.12

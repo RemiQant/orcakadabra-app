@@ -40,51 +40,7 @@ def get_supabase() -> "Client":
     return create_client(url, key)
 
 
-# ── Cloudflare R2 Client (lazy) ───────────────────────────────────────────────
-@lru_cache(maxsize=1)
-def get_r2():
-    """
-    FastAPI dependency. Initialised once on first request.
-    Install boto3 and set R2_* env vars to use.
-    """
-    try:
-        import boto3  # noqa: PLC0415
-        from botocore.client import Config  # noqa: PLC0415
-    except ImportError as exc:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="boto3 is not installed. Run: pip install boto3",
-        ) from exc
-
-    endpoint = os.getenv("R2_ENDPOINT_URL")
-    access_key = os.getenv("R2_ACCESS_KEY_ID")
-    secret_key = os.getenv("R2_SECRET_ACCESS_KEY")
-    bucket = os.getenv("R2_BUCKET_NAME")
-    if not all([endpoint, access_key, secret_key, bucket]):
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="R2_ENDPOINT_URL, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, and R2_BUCKET_NAME env vars are not set.",
-        )
-    client = boto3.client(
-        "s3",
-        endpoint_url=endpoint,
-        aws_access_key_id=access_key,
-        aws_secret_access_key=secret_key,
-        config=Config(signature_version="s3v4"),
-        region_name="auto",
-    )
-    # Attach bucket name so callers can do: r2, bucket = Depends(get_r2)
-    client._bucket_name = bucket  # type: ignore[attr-defined]
-    return client
-
-
-# R2_BUCKET_NAME is now read lazily inside get_r2() alongside the other R2 vars.
-# Access it via: r2_client._bucket_name  or pass R2Dep to your route.
-
-# Type aliases for use in route signatures, e.g.:
-#   async def my_route(db: SupabaseDep, storage: R2Dep): ...
 SupabaseDep = Annotated["Client", Depends(get_supabase)]
-R2Dep = Annotated[object, Depends(get_r2)]
 
 # ── App ───────────────────────────────────────────────────────────────────────
 # Disable interactive API docs in production — they expose your schema publicly.

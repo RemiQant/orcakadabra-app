@@ -1,11 +1,8 @@
 from fastapi import APIRouter, UploadFile, File, Form, HTTPException
 import asyncio
 import time
-from io import BytesIO
-from PIL import Image
 
 from services.oss_services import upload_to_oss
-from services.r2_services import upload_to_r2
 from services.ai_services import analyze_documents_from_url
 from services.db_services import save_merchant_kyc
 
@@ -16,24 +13,9 @@ from core.config import ALIBABA_CLOUD_ACCESS_KEY_ID, ALIBABA_CLOUD_ACCESS_KEY_SE
 
 router = APIRouter()
 
-def compress_locally(file_bytes: bytes) -> bytes:
-    img = Image.open(BytesIO(file_bytes))
-    if img.mode!= "RGB":
-        img = img.convert("RGB")
-    img.thumbnail((1024, 1024), Image.Resampling.LANCZOS)
-    buf = BytesIO()
-    img.save(buf, format="JPEG", quality=85)
-    return buf.getvalue()
-
-async def upload_with_fallback(file_bytes: bytes, filename: str, folder: str) -> str:
-    try:
-        url = await asyncio.to_thread(upload_to_oss, file_bytes, filename, folder)
-        return f"{url}?x-oss-process=image/resize,w_1024/format,jpg/quality,q_85"
-    except Exception as e:
-        print(f"⚠️ OSS Gagal ({e}). Fallback ke R2 & Kompresi Lokal...")
-        compressed_bytes = await asyncio.to_thread(compress_locally, file_bytes)
-        url = await asyncio.to_thread(upload_to_r2, compressed_bytes, filename, folder)
-        return url
+async def upload_to_storage(file_bytes: bytes, filename: str, folder: str) -> str:
+    url = await asyncio.to_thread(upload_to_oss, file_bytes, filename, folder)
+    return f"{url}?x-oss-process=image/resize,w_1024/format,jpg/quality,q_85"
 
 @router.post("/verify-merchant")
 async def verify_merchant(
@@ -46,8 +28,8 @@ async def verify_merchant(
         # 1. Baca byte KTP saja
         ktp_bytes = await ktp.read()
         
-        # 2. Upload KTP ke storage (dengan mekanisme fallback)
-        ktp_url = await upload_with_fallback(ktp_bytes, ktp.filename, "ktp")
+        # 2. Upload KTP ke OSS
+        ktp_url = await upload_to_storage(ktp_bytes, ktp.filename, "ktp")
         
         # 3. Lempar ke AI (NIK disertakan untuk cross-validasi)
         ai_result = await asyncio.to_thread(
