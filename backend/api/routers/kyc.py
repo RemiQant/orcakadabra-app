@@ -22,6 +22,7 @@ async def verify_merchant(
     nama: str = Form(...),
     nik: str = Form(...),
     tgl_lahir: str = Form(...),
+    tempat_lahir: str = Form(...),
     ktp: UploadFile = File(...)
 ):
     try:
